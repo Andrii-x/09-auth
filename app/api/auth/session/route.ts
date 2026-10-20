@@ -1,3 +1,6 @@
-export async function GET() {
-  return Response.json({ user: null });
+import { proxyApiRequest } from "@/app/api/api";
+import type { NextRequest } from "next/server";
+
+export async function GET(request: NextRequest) {
+  return proxyApiRequest(request, "auth/session");
 }

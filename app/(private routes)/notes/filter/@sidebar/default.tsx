@@ -1,3 +1,3 @@
 export default function SidebarDefault() {
-  return <aside>Sidebar</aside>;
+  return <aside aria-label="Note filters" />;
 }

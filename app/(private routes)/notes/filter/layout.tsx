@@ -6,9 +6,9 @@ export default function FilterLayout({
   sidebar: React.ReactNode;
 }) {
   return (
-    <>
+    <div className="notesFilterLayout">
       {children}
       {sidebar}
-    </>
+    </div>
   );
 }

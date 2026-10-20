@@ -1,3 +1,19 @@
-export default function NotesClient() {
-  return <div>Notes list</div>;
+"use client";
+
+import NotesDashboard from "@/components/NotesDashboard.client";
+import type { NoteTag } from "@/types/note";
+
+const noteTags: NoteTag[] = ["Todo", "Work", "Personal", "Meeting"];
+
+type FilteredNotesProps = {
+  tag: string;
+};
+
+export default function FilteredNotes({ tag }: FilteredNotesProps) {
+  const selectedTag = noteTags.find(
+    (noteTag) => noteTag.toLowerCase() === tag.toLowerCase(),
+  );
+
+  if (!selectedTag) return <p role="alert">Unknown note tag: {tag}</p>;
+  return <NotesDashboard tag={selectedTag} />;
 }

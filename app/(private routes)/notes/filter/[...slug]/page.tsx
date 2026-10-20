@@ -1,9 +1,12 @@
-export default async function NotesFilterSlugPage({
-  params,
-}: {
-  params: Promise<{ slug: string[] }>;
-}) {
-  const { slug } = await params;
+import FilteredNotes from "./Notes.client";
 
-  return <div>{slug?.join('/') ?? 'slug'}</div>;
+type NotesFilterPageProps = {
+  params: Promise<{ slug: string[] }>;
+};
+
+export default async function NotesFilterPage({
+  params,
+}: NotesFilterPageProps) {
+  const { slug } = await params;
+  return <FilteredNotes tag={slug[0] ?? ""} />;
 }

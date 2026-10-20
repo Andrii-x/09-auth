@@ -1,3 +1,6 @@
-﻿export async function GET() {
-  return Response.json({ ok: true, message: "Auth API is not connected yet." });
+import { proxyApiRequest } from "@/app/api/api";
+import type { NextRequest } from "next/server";
+
+export async function GET(request: NextRequest) {
+  return proxyApiRequest(request, "auth/session");
 }

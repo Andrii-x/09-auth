@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import AuthNavigation from "@/components/AuthNavigation";
+import AuthProvider from "@/components/AuthProvider/AuthProvider";
+import Footer from "@/components/Footer/Footer";
+import Header from "@/components/Header/Header";
+import TanStackProvider from "@/components/TanStackProvider/TanStackProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,14 +20,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <header className="siteHeader">
-          <Link className="brand" href="/">
-            NoteHub
-          </Link>
-          <AuthNavigation />
-        </header>
-        {children}
-        {modal}
+        <TanStackProvider>
+          <AuthProvider>
+            <Header />
+            {children}
+            {modal}
+            <Footer />
+          </AuthProvider>
+        </TanStackProvider>
       </body>
     </html>
   );

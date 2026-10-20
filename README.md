@@ -1,6 +1,8 @@
 # 09-auth
 
-A Next.js App Router scaffold for the NoteHub sign-in, sign-up, and profile pages.
+NoteHub frontend built with Next.js App Router. The application includes
+authentication, profile management, paginated and searchable notes, note
+creation/deletion, and intercepted note-detail previews.
 
 ## Run locally
 
@@ -9,11 +11,11 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The app includes routes for
-`/sign-in`, `/sign-up`, `/profile`, and `/profile/edit`, using the CSS Modules in
-`styles/`.
+Set `NEXT_PUBLIC_API_URL` to the NoteHub API host (for example,
+`https://notehub-public.goit.study`) before starting the app. API requests use
+that host with `/api`, send credentials, and use the API's session cookies.
 
-Authentication and profile persistence are not configured. The forms display an
-explicit message when submitted; the profile routes are UI scaffolding and are
-not protected. Connect an authentication provider and API before using these
-routes for real accounts.
+Available routes include `/sign-in`, `/sign-up`, `/notes`, `/profile`, and
+`/profile/edit`. Private routes are guarded by the Next.js middleware. Note
+queries are cached with TanStack Query; authentication and note-form drafts are
+stored with Zustand.

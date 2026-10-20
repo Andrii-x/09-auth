@@ -1,3 +1,5 @@
-export default function CreateNoteAction() {
-  return <div>Create Note Action</div>;
+import NoteForm from "@/components/NoteForm/NoteForm";
+
+export default function CreateNotePage() {
+  return <NoteForm />;
 }

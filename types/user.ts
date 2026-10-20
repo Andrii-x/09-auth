@@ -1,5 +1,16 @@
 export type User = {
-  id: string;
+  username: string;
   email: string;
-  name?: string;
+  avatar: string;
 };
+
+export type Credentials = {
+  email: string;
+  password: string;
+};
+
+export type RegistrationData = Credentials & {
+  username: string;
+};
+
+export type UpdateUserData = Pick<User, "username">;

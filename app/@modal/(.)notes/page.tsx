@@ -1,3 +1,3 @@
-﻿export default function NotesModal() {
+export default function NotesModalPage() {
   return null;
 }
