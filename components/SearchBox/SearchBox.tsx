@@ -1,0 +1,1 @@
+type SearchBoxProps = { value?: string; onChange?: (value: string) => void; }; export default function SearchBox({ value = "", onChange }: SearchBoxProps) { return <input aria-label="Search notes" value={value} onChange={(event) => onChange?.(event.target.value)} />; }

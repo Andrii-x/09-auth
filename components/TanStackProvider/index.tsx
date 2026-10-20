@@ -1,1 +1,1 @@
-export default function TanStackProvider({ children }: { children: React.ReactNode }) { return <>{children}</>; }
+export { default } from "./TanStackProvider";

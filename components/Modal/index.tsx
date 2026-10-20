@@ -1,1 +1,1 @@
-export default function Modal() { return null; }
+export { default } from "./Modal";

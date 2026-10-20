@@ -1,1 +1,1 @@
-export default function SearchBox() { return <input aria-label="Search" />; }
+export { default } from "./SearchBox";

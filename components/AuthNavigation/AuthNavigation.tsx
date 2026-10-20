@@ -1,0 +1,1 @@
+export default function AuthNavigation() { return <nav aria-label="account navigation"><a href="/profile">Profile</a> <a href="/sign-in">Login</a> <a href="/sign-up">Sign up</a></nav>; }

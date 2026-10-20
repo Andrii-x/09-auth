@@ -1,1 +1,1 @@
-export default function NoteForm() { return <form>NoteForm</form>; }
+export { default } from "./NoteForm";

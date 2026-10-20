@@ -1,0 +1,1 @@
+type PaginationProps = { page: number; totalPages?: number }; export default function Pagination({ page, totalPages = 1 }: PaginationProps) { return <div>Page {page} / {totalPages}</div>; }

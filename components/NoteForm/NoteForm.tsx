@@ -1,0 +1,1 @@
+export default function NoteForm() { return <form><input aria-label="username" defaultValue="" /><button type="submit">Save</button></form>; }

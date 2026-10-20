@@ -1,0 +1,1 @@
+type NoteListProps = { items?: Array<{ id: string; title: string }> }; export default function NoteList({ items = [] }: NoteListProps) { return <ul>{items.map((item) => <li key={item.id}>{item.title}</li>)}</ul>; }
