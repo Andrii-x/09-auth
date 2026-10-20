@@ -1,0 +1,1 @@
+export default function AuthNavigation() { return <nav>AuthNavigation</nav>; }
