@@ -1,7 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { isAxiosError, type AxiosResponse } from "axios";
-import api from "@/lib/api/api";
+import { api } from "@/lib/api/api";
 import type {
   Note,
   NoteDraft,

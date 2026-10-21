@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { parseSetCookie } from "cookie";
 
 const privateRoutes = ["/notes", "/profile"];
 const authRoutes = ["/sign-in", "/sign-up"];
@@ -52,57 +53,24 @@ async function refreshSession(
   });
   if (!response.ok) return null;
 
-  const setCookie = response.headers.get("set-cookie");
-  if (!setCookie) return null;
+  const headersWithSetCookie = response.headers as Headers & {
+    getSetCookie?: () => string[];
+  };
+  const setCookieHeaders =
+    headersWithSetCookie.getSetCookie?.() ??
+    response.headers
+      .get("set-cookie")
+      ?.split(/,(?=\s*[^;,]+=)/) ??
+    [];
+  if (setCookieHeaders.length === 0) return null;
 
   const redirectResponse = NextResponse.redirect(destination);
-  const cookieValues = setCookie.split(/,(?=\s*[^;,]+=)/);
   let cookiesSet = 0;
-  for (const cookieValue of cookieValues) {
-    const [cookiePair, ...attributes] = cookieValue.split(";");
-    const separator = cookiePair.indexOf("=");
-    if (separator <= 0) continue;
-
-    const name = cookiePair.slice(0, separator).trim();
-    const value = cookiePair.slice(separator + 1).trim();
-    const options: {
-      path?: string;
-      domain?: string;
-      maxAge?: number;
-      expires?: Date;
-      httpOnly?: boolean;
-      secure?: boolean;
-      sameSite?: "strict" | "lax" | "none";
-    } = {};
-    for (const attribute of attributes) {
-      const [rawName, rawValue] = attribute.trim().split("=", 2);
-      const attributeName = rawName.toLowerCase();
-      if (attributeName === "path" && rawValue) options.path = rawValue;
-      if (attributeName === "domain" && rawValue) options.domain = rawValue;
-      if (attributeName === "max-age" && rawValue) {
-        const maxAge = Number(rawValue);
-        if (Number.isFinite(maxAge)) options.maxAge = maxAge;
-      }
-      if (attributeName === "expires" && rawValue) {
-        const expires = new Date(rawValue);
-        if (!Number.isNaN(expires.getTime())) options.expires = expires;
-      }
-      if (attributeName === "httponly") options.httpOnly = true;
-      if (attributeName === "secure") options.secure = true;
-      if (
-        attributeName === "samesite" &&
-        (rawValue?.toLowerCase() === "strict" ||
-          rawValue?.toLowerCase() === "lax" ||
-          rawValue?.toLowerCase() === "none")
-      ) {
-        options.sameSite = rawValue.toLowerCase() as
-          | "strict"
-          | "lax"
-          | "none";
-      }
-    }
+  for (const setCookieHeader of setCookieHeaders) {
+    const { name, value, ...options } = parseSetCookie(setCookieHeader);
+    if (value === undefined) continue;
     redirectResponse.cookies.set(name, value, options);
-    cookiesSet += 1;
+    cookiesSet++;
   }
   return cookiesSet > 0 ? redirectResponse : null;
 }

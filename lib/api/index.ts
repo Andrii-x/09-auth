@@ -1,4 +1,4 @@
-export { default as api } from "./api";
+export { api } from "./api";
 export {
   createNote,
   deleteNote,

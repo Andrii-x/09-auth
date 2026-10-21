@@ -8,5 +8,5 @@ export default async function NotesFilterPage({
   params,
 }: NotesFilterPageProps) {
   const { slug } = await params;
-  return <FilteredNotes tag={slug[0] ?? ""} />;
+  return <FilteredNotes tag={slug.join("/")} />;
 }

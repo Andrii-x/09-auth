@@ -1,5 +1,5 @@
 import type { AxiosResponse } from "axios";
-import api from "@/lib/api/api";
+import { api } from "@/lib/api/api";
 import type { Note, NoteDraft, NotesQuery, NotesResponse } from "@/types/note";
 import type {
   Credentials,
