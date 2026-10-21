@@ -18,7 +18,7 @@ const fallbackAvatar =
 export default async function ProfilePage() {
   let user: User;
   try {
-    user = await getCurrentUserServer();
+    user = (await getCurrentUserServer()).data;
   } catch (error: unknown) {
     if (isAxiosError(error) && error.response?.status === 401) {
       redirect("/sign-in");

@@ -1,54 +1,86 @@
 import "server-only";
 import { cookies } from "next/headers";
-import type { AxiosResponse } from "axios";
+import { isAxiosError, type AxiosResponse } from "axios";
 import api from "@/lib/api/api";
-import type { Note } from "@/types/note";
-import type { User } from "@/types/user";
+import type {
+  Note,
+  NoteDraft,
+  NotesQuery,
+  NotesResponse,
+} from "@/types/note";
+import type { UpdateUserData, User } from "@/types/user";
 
-type ApiEnvelope<T> = T | { data: T };
+export type SessionResponse = {
+  user: User | null;
+};
 
-function unwrap<T>(response: AxiosResponse<ApiEnvelope<T>>): T {
-  const body = response.data;
-  return typeof body === "object" && body !== null && "data" in body
-    ? body.data
-    : body;
-}
-
-function unwrapField<T>(response: AxiosResponse<unknown>, key: string): T {
-  let body = response.data;
-  if (typeof body === "object" && body !== null && "data" in body) {
-    body = Reflect.get(body, "data");
-  }
-  if (typeof body === "object" && body !== null && key in body) {
-    return Reflect.get(body, key) as T;
-  }
-  return body as T;
-}
-
-async function getCookieHeader(): Promise<string> {
+async function cookieConfig(): Promise<{
+  headers: { Cookie: string };
+}> {
   const cookieStore = await cookies();
-  return cookieStore.toString();
+  return { headers: { Cookie: cookieStore.toString() } };
 }
 
-export async function fetchNoteByIdServer(id: string): Promise<Note> {
-  const response = await api.get<ApiEnvelope<Note | { note: Note }>>(
-    `/notes/${encodeURIComponent(id)}`,
-    { headers: { Cookie: await getCookieHeader() } },
+async function requestWithCookie<T>(
+  request: () => Promise<AxiosResponse<T>>,
+): Promise<AxiosResponse<T>> {
+  try {
+    return await request();
+  } catch (error: unknown) {
+    if (isAxiosError(error) && !error.response) {
+      throw new Error(`API request failed: ${error.message}`, { cause: error });
+    }
+    throw error;
+  }
+}
+
+export async function fetchNotesServer(
+  query: NotesQuery = {},
+): Promise<AxiosResponse<NotesResponse>> {
+  const config = await cookieConfig();
+  return requestWithCookie(() => api.get("/notes", { ...config, params: query }));
+}
+
+export async function fetchNoteByIdServer(
+  id: string,
+): Promise<AxiosResponse<Note>> {
+  const config = await cookieConfig();
+  return requestWithCookie(() =>
+    api.get(`/notes/${encodeURIComponent(id)}`, config),
   );
-  return unwrapField<Note>(response, "note");
 }
 
-export async function getCurrentUserServer(): Promise<User> {
-  const response = await api.get<ApiEnvelope<User | { user: User }>>("/users/me", {
-    headers: { Cookie: await getCookieHeader() },
-  });
-  return unwrapField<User>(response, "user");
+export async function createNoteServer(
+  note: NoteDraft,
+): Promise<AxiosResponse<Note>> {
+  const config = await cookieConfig();
+  return requestWithCookie(() => api.post("/notes", note, config));
 }
 
-export async function getSessionServer(): Promise<{ user: User | null }> {
-  const response = await api.get<ApiEnvelope<{ user: User | null }>>(
-    "/auth/session",
-    { headers: { Cookie: await getCookieHeader() } },
+export async function deleteNoteServer(
+  id: string,
+): Promise<AxiosResponse<Note>> {
+  const config = await cookieConfig();
+  return requestWithCookie(() =>
+    api.delete(`/notes/${encodeURIComponent(id)}`, config),
   );
-  return unwrap(response);
+}
+
+export async function getCurrentUserServer(): Promise<AxiosResponse<User>> {
+  const config = await cookieConfig();
+  return requestWithCookie(() => api.get("/users/me", config));
+}
+
+export async function updateCurrentUserServer(
+  data: UpdateUserData,
+): Promise<AxiosResponse<User>> {
+  const config = await cookieConfig();
+  return requestWithCookie(() => api.patch("/users/me", data, config));
+}
+
+export async function getSessionServer(): Promise<
+  AxiosResponse<SessionResponse>
+> {
+  const config = await cookieConfig();
+  return requestWithCookie(() => api.get("/auth/session", config));
 }

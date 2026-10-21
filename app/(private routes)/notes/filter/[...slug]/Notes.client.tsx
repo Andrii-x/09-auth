@@ -1,6 +1,6 @@
 "use client";
 
-import NotesDashboard from "@/components/NotesDashboard.client";
+import Notes from "../../Notes.client";
 import type { NoteTag } from "@/types/note";
 
 const noteTags: NoteTag[] = ["Todo", "Work", "Personal", "Meeting"];
@@ -15,5 +15,5 @@ export default function FilteredNotes({ tag }: FilteredNotesProps) {
   );
 
   if (!selectedTag) return <p role="alert">Unknown note tag: {tag}</p>;
-  return <NotesDashboard tag={selectedTag} />;
+  return <Notes tag={selectedTag} />;
 }

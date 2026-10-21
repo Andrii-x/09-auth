@@ -38,7 +38,10 @@ function isTokenExpired(token: string): boolean {
   }
 }
 
-async function refreshSession(request: NextRequest): Promise<NextResponse | null> {
+async function refreshSession(
+  request: NextRequest,
+  destination: URL,
+): Promise<NextResponse | null> {
   const refreshToken = request.cookies.get("refreshToken")?.value;
   if (!refreshToken) return null;
 
@@ -49,10 +52,59 @@ async function refreshSession(request: NextRequest): Promise<NextResponse | null
   });
   if (!response.ok) return null;
 
-  const nextResponse = NextResponse.next();
   const setCookie = response.headers.get("set-cookie");
-  if (setCookie) nextResponse.headers.append("set-cookie", setCookie);
-  return nextResponse;
+  if (!setCookie) return null;
+
+  const redirectResponse = NextResponse.redirect(destination);
+  const cookieValues = setCookie.split(/,(?=\s*[^;,]+=)/);
+  let cookiesSet = 0;
+  for (const cookieValue of cookieValues) {
+    const [cookiePair, ...attributes] = cookieValue.split(";");
+    const separator = cookiePair.indexOf("=");
+    if (separator <= 0) continue;
+
+    const name = cookiePair.slice(0, separator).trim();
+    const value = cookiePair.slice(separator + 1).trim();
+    const options: {
+      path?: string;
+      domain?: string;
+      maxAge?: number;
+      expires?: Date;
+      httpOnly?: boolean;
+      secure?: boolean;
+      sameSite?: "strict" | "lax" | "none";
+    } = {};
+    for (const attribute of attributes) {
+      const [rawName, rawValue] = attribute.trim().split("=", 2);
+      const attributeName = rawName.toLowerCase();
+      if (attributeName === "path" && rawValue) options.path = rawValue;
+      if (attributeName === "domain" && rawValue) options.domain = rawValue;
+      if (attributeName === "max-age" && rawValue) {
+        const maxAge = Number(rawValue);
+        if (Number.isFinite(maxAge)) options.maxAge = maxAge;
+      }
+      if (attributeName === "expires" && rawValue) {
+        const expires = new Date(rawValue);
+        if (!Number.isNaN(expires.getTime())) options.expires = expires;
+      }
+      if (attributeName === "httponly") options.httpOnly = true;
+      if (attributeName === "secure") options.secure = true;
+      if (
+        attributeName === "samesite" &&
+        (rawValue?.toLowerCase() === "strict" ||
+          rawValue?.toLowerCase() === "lax" ||
+          rawValue?.toLowerCase() === "none")
+      ) {
+        options.sameSite = rawValue.toLowerCase() as
+          | "strict"
+          | "lax"
+          | "none";
+      }
+    }
+    redirectResponse.cookies.set(name, value, options);
+    cookiesSet += 1;
+  }
+  return cookiesSet > 0 ? redirectResponse : null;
 }
 
 export async function proxy(request: NextRequest): Promise<NextResponse | undefined> {
@@ -65,7 +117,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse | undefi
   );
 
   if (matchesRoute(pathname, privateRoutes) && !hasValidAccessToken) {
-    const refreshResponse = await refreshSession(request);
+    const refreshResponse = await refreshSession(request, request.nextUrl);
     if (refreshResponse) return refreshResponse;
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
@@ -74,14 +126,12 @@ export async function proxy(request: NextRequest): Promise<NextResponse | undefi
     if (hasValidAccessToken) {
       return NextResponse.redirect(new URL("/notes", request.url));
     }
-    const refreshResponse = await refreshSession(request);
+    const refreshResponse = await refreshSession(
+      request,
+      new URL("/notes", request.url),
+    );
     if (refreshResponse) {
-      const redirectResponse = NextResponse.redirect(
-        new URL("/notes", request.url),
-      );
-      const setCookie = refreshResponse.headers.get("set-cookie");
-      if (setCookie) redirectResponse.headers.append("set-cookie", setCookie);
-      return redirectResponse;
+      return refreshResponse;
     }
   }
 }

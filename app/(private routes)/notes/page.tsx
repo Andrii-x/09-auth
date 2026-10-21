@@ -1,5 +1,5 @@
-import NotesDashboard from "@/components/NotesDashboard.client";
+import Notes from "./Notes.client";
 
 export default function NotesPage() {
-  return <NotesDashboard />;
+  return <Notes />;
 }

@@ -17,7 +17,7 @@ export default async function NotePage({ params }: NotePageProps) {
 
   await queryClient.prefetchQuery({
     queryKey,
-    queryFn: () => fetchNoteByIdServer(id),
+    queryFn: async () => (await fetchNoteByIdServer(id)).data,
   });
   const noteError = queryClient.getQueryState(queryKey)?.error;
   if (isAxiosError(noteError) && noteError.response?.status === 404) notFound();

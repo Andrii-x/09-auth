@@ -50,8 +50,11 @@ export async function createNote(note: NoteDraft): Promise<Note> {
   return unwrapField<Note>(response, "note");
 }
 
-export async function deleteNote(id: string): Promise<void> {
-  await api.delete(`/notes/${encodeURIComponent(id)}`);
+export async function deleteNote(id: string): Promise<Note> {
+  const response = await api.delete<ApiEnvelope<Note | { note: Note }>>(
+    `/notes/${encodeURIComponent(id)}`,
+  );
+  return unwrapField<Note>(response, "note");
 }
 
 export async function login(credentials: Credentials): Promise<User> {

@@ -1,4 +1,4 @@
-import { proxyApiRequest } from "@/app/api/api";
+import { proxyApiRequest } from "@/lib/api/proxyApiRequest";
 import type { NextRequest } from "next/server";
 
 export async function POST(request: NextRequest) {

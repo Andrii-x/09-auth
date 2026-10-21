@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import { getCurrentUser, getSession } from "@/lib/api/clientApi";
@@ -10,8 +10,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const setUser = useAuthStore((state) => state.setUser);
   const clearUser = useAuthStore((state) => state.clearUser);
-  const setError = useAuthStore((state) => state.setError);
-  const authError = useAuthStore((state) => state.error);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -20,13 +19,16 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const session = await getSession();
         const user = session.user ?? (await getCurrentUser());
-        if (active) setUser(user);
+        if (active) {
+          setUser(user);
+          setAuthError(null);
+        }
       } catch (error: unknown) {
         if (!active) return;
         if (isAxiosError(error) && error.response?.status === 401) {
           clearUser();
         } else {
-          setError(
+          setAuthError(
             error instanceof Error
               ? error.message
               : "Unable to verify your session.",
@@ -42,7 +44,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, [clearUser, router, setError, setUser]);
+  }, [clearUser, router, setUser]);
 
   return (
     <>

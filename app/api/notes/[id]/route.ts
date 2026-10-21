@@ -1,4 +1,4 @@
-import { proxyApiRequest } from "@/app/api/api";
+import { proxyApiRequest } from "@/lib/api/proxyApiRequest";
 import type { NextRequest } from "next/server";
 
 type NoteRouteContext = {
@@ -14,6 +14,14 @@ export async function GET(
 }
 
 export async function DELETE(
+  request: NextRequest,
+  { params }: NoteRouteContext,
+) {
+  const { id } = await params;
+  return proxyApiRequest(request, `notes/${encodeURIComponent(id)}`);
+}
+
+export async function PATCH(
   request: NextRequest,
   { params }: NoteRouteContext,
 ) {
