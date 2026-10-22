@@ -28,7 +28,7 @@ export default function SignInPage() {
         password: String(formData.get("password") ?? ""),
       });
       setUser(user);
-      router.replace("/notes");
+      router.replace("/profile");
       router.refresh();
     } catch (cause: unknown) {
       setError(cause instanceof Error ? cause.message : "Unable to sign in.");

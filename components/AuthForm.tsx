@@ -31,7 +31,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
     try {
       const user = isSignUp
         ? await register({
-            username: String(formData.get("username") ?? ""),
             email,
             password,
           })
@@ -52,21 +51,6 @@ export default function AuthForm({ mode }: AuthFormProps) {
     <main className={css.mainContent}>
       <form className={css.form} onSubmit={handleSubmit}>
         <h1 className={css.formTitle}>{isSignUp ? "Sign up" : "Sign in"}</h1>
-
-        {isSignUp ? (
-          <div className={css.formGroup}>
-            <label htmlFor="auth-username">Username</label>
-            <input
-              id="auth-username"
-              type="text"
-              name="username"
-              className={css.input}
-              autoComplete="username"
-              minLength={2}
-              required
-            />
-          </div>
-        ) : null}
 
         <div className={css.formGroup}>
           <label htmlFor="auth-email">Email</label>

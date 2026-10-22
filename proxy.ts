@@ -75,7 +75,7 @@ async function refreshSession(
   return cookiesSet > 0 ? redirectResponse : null;
 }
 
-export async function proxy(request: NextRequest): Promise<NextResponse | undefined> {
+export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
   const accessToken =
     request.cookies.get("accessToken")?.value ??
@@ -102,6 +102,8 @@ export async function proxy(request: NextRequest): Promise<NextResponse | undefi
       return refreshResponse;
     }
   }
+
+  return NextResponse.next();
 }
 
 export const config = {

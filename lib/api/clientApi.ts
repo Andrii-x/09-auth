@@ -3,7 +3,6 @@ import { api } from "@/lib/api/api";
 import type { Note, NoteDraft, NotesQuery, NotesResponse } from "@/types/note";
 import type {
   Credentials,
-  RegistrationData,
   UpdateUserData,
   User,
 } from "@/types/user";
@@ -65,7 +64,7 @@ export async function login(credentials: Credentials): Promise<User> {
   return unwrapField<User>(response, "user");
 }
 
-export async function register(data: RegistrationData): Promise<User> {
+export async function register(data: Credentials): Promise<User> {
   const response = await api.post<ApiEnvelope<User | { user: User }>>(
     "/auth/register",
     data,

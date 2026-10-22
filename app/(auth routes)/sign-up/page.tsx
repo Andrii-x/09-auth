@@ -24,12 +24,11 @@ export default function SignUpPage() {
 
     try {
       const user = await register({
-        username: String(formData.get("username") ?? ""),
         email: String(formData.get("email") ?? ""),
         password: String(formData.get("password") ?? ""),
       });
       setUser(user);
-      router.replace("/notes");
+      router.replace("/profile");
       router.refresh();
     } catch (cause: unknown) {
       setError(cause instanceof Error ? cause.message : "Unable to register.");
@@ -42,18 +41,6 @@ export default function SignUpPage() {
     <main className={styles.mainContent}>
       <form className={styles.form} onSubmit={handleSubmit}>
         <h1 className={styles.formTitle}>Sign up</h1>
-        <div className={styles.formGroup}>
-          <label htmlFor="sign-up-username">Username</label>
-          <input
-            id="sign-up-username"
-            className={styles.input}
-            type="text"
-            name="username"
-            autoComplete="username"
-            minLength={2}
-            required
-          />
-        </div>
         <div className={styles.formGroup}>
           <label htmlFor="sign-up-email">Email</label>
           <input

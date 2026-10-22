@@ -92,12 +92,16 @@ export default function Notes({ tag }: NotesProps) {
         />
         <Link href="/notes/action/create">Create note</Link>
       </header>
-      <NoteList notes={notesQuery.data.notes} />
-      <Pagination
-        page={state.page}
-        totalPages={notesQuery.data.totalPages}
-        onPageChange={(page) => dispatch({ type: "page-changed", page })}
-      />
+      {notesQuery.data.notes.length > 0 ? (
+        <>
+          <NoteList notes={notesQuery.data.notes} />
+          <Pagination
+            page={state.page}
+            totalPages={notesQuery.data.totalPages}
+            onPageChange={(page) => dispatch({ type: "page-changed", page })}
+          />
+        </>
+      ) : null}
     </main>
   );
 }

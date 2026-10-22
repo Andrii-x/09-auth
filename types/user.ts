@@ -9,8 +9,4 @@ export type Credentials = {
   password: string;
 };
 
-export type RegistrationData = Credentials & {
-  username: string;
-};
-
 export type UpdateUserData = Pick<User, "username">;
