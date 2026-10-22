@@ -1,8 +1,7 @@
-import { isAxiosError } from "axios";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { api } from "@/app/api/api";
-import { applySetCookies } from "@/lib/api/routeCookies";
+import { logErrorResponse } from "@/lib/api/logErrorResponse";
 
 type NoteRouteContext = {
   params: Promise<{ id: string }>;
@@ -14,10 +13,9 @@ async function forwardNoteRequest(
   method: "get" | "delete" | "patch",
 ) {
   const cookieStore = await cookies();
-  const url = `/api/notes/${encodeURIComponent(id)}`;
+  const url = `/notes/${encodeURIComponent(id)}`;
   const config = {
     headers: { Cookie: cookieStore.toString() },
-    params: request.nextUrl.searchParams,
   };
 
   try {
@@ -26,18 +24,20 @@ async function forwardNoteRequest(
         ? await api.get(url, config)
         : method === "delete"
           ? await api.delete(url, config)
-          : await api.patch(url, await request.json(), config);
-    applySetCookies(cookieStore, response.headers["set-cookie"]);
+          : await api.patch(url, await request.json(), {
+              ...config,
+              headers: {
+                ...config.headers,
+                "Content-Type": "application/json",
+              },
+            });
     return NextResponse.json(response.data, { status: response.status });
   } catch (error: unknown) {
-    if (isAxiosError(error)) {
-      console.error(`Note ${method.toUpperCase()} API request failed:`, error.response?.data ?? error.message);
-      return NextResponse.json(error.response?.data ?? { error: "Note request failed." }, {
-        status: error.response?.status ?? 500,
-      });
-    }
-    console.error(`Note ${method.toUpperCase()} route failed:`, error);
-    return NextResponse.json({ error: "Note request failed." }, { status: 500 });
+    return logErrorResponse(
+      error,
+      `Note ${method.toUpperCase()} API request failed`,
+      "Note request failed.",
+    );
   }
 }
 

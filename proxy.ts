@@ -41,38 +41,56 @@ function isTokenExpired(token: string): boolean {
 
 async function refreshSession(
   request: NextRequest,
-  destination: URL,
+  destination?: URL,
 ): Promise<NextResponse | null> {
   const refreshToken = request.cookies.get("refreshToken")?.value;
   if (!refreshToken) return null;
 
-  const response = await fetch(`${apiBaseUrl}/api/auth/refresh`, {
+  const refreshResponse = await fetch(`${apiBaseUrl}/api/auth/refresh`, {
     method: "POST",
     headers: { cookie: request.headers.get("cookie") ?? "" },
     cache: "no-store",
   });
-  if (!response.ok) return null;
+  if (!refreshResponse.ok) return null;
 
-  const headersWithSetCookie = response.headers as Headers & {
+  const headersWithSetCookie = refreshResponse.headers as Headers & {
     getSetCookie?: () => string[];
   };
   const setCookieHeaders =
     headersWithSetCookie.getSetCookie?.() ??
-    response.headers
+    refreshResponse.headers
       .get("set-cookie")
       ?.split(/,(?=\s*[^;,]+=)/) ??
     [];
   if (setCookieHeaders.length === 0) return null;
 
-  const redirectResponse = NextResponse.redirect(destination);
-  let cookiesSet = 0;
-  for (const setCookieHeader of setCookieHeaders) {
-    const { name, value, ...options } = parseSetCookie(setCookieHeader);
-    if (value === undefined) continue;
-    redirectResponse.cookies.set(name, value, options);
-    cookiesSet++;
+  const refreshedCookies = setCookieHeaders
+    .map((setCookieHeader) => parseSetCookie(setCookieHeader))
+    .filter((cookie) => cookie.value !== undefined);
+  if (refreshedCookies.length === 0) return null;
+
+  for (const { name, value } of refreshedCookies) {
+    if (value !== undefined) request.cookies.set(name, value);
   }
-  return cookiesSet > 0 ? redirectResponse : null;
+
+  const headers = new Headers(request.headers);
+  const redirectResponse = destination
+    ? NextResponse.redirect(destination)
+    : undefined;
+  for (const { name, value, ...options } of refreshedCookies) {
+    if (value === undefined) continue;
+    redirectResponse?.cookies.set(name, value, options);
+  }
+
+  if (redirectResponse) return redirectResponse;
+
+  headers.set("cookie", request.cookies.toString());
+  const continuationResponse = NextResponse.next({ request: { headers } });
+  for (const { name, value, ...options } of refreshedCookies) {
+    if (value === undefined) continue;
+    continuationResponse.cookies.set(name, value, options);
+  }
+  return continuationResponse;
 }
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
@@ -85,7 +103,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   );
 
   if (matchesRoute(pathname, privateRoutes) && !hasValidAccessToken) {
-    const refreshResponse = await refreshSession(request, request.nextUrl);
+    const refreshResponse = await refreshSession(request);
     if (refreshResponse) return refreshResponse;
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
