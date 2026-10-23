@@ -1,44 +1,42 @@
+import { isAxiosError } from "axios";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { api } from "@/app/api/api";
-import { logErrorResponse } from "@/lib/api/logErrorResponse";
-import type { NoteTag, NotesQuery } from "@/types/note";
 
 export async function GET(request: NextRequest) {
   const cookieStore = await cookies();
   const searchParams = request.nextUrl.searchParams;
-  const pageValue = searchParams.get("page");
-  const page = pageValue ? Number(pageValue) : undefined;
-  const rawTag = searchParams.get("tag");
-  const validTags: NoteTag[] = ["Todo", "Work", "Personal", "Meeting"];
-  const tag = validTags.find(
-    (validTag) => validTag.toLowerCase() === rawTag?.toLowerCase(),
-  );
-  const params: NotesQuery = {
-    search: searchParams.get("search") ?? undefined,
-    page: page !== undefined && Number.isFinite(page) ? page : undefined,
-    tag,
-  };
+  const page = Number(searchParams.get("page") ?? "1");
+  const tag = searchParams.get("tag") ?? "All";
+  const search = searchParams.get("search") ?? "";
 
   try {
-    const response = await api.get("/notes", {
+    const response = await api.get("/api/notes", {
       headers: { Cookie: cookieStore.toString() },
-      params,
+      params: {
+        page: Number.isFinite(page) && page > 0 ? page : 1,
+        ...(tag !== "All" ? { tag } : {}),
+        ...(search ? { search } : {}),
+      },
     });
     return NextResponse.json(response.data, { status: response.status });
   } catch (error: unknown) {
-    return logErrorResponse(
-      error,
-      "Notes API request failed",
-      "Unable to load notes.",
-    );
+    if (isAxiosError(error)) {
+      console.error("Notes API request failed:", error.response?.data ?? error.message);
+      return NextResponse.json(
+        error.response?.data ?? { error: "Unable to load notes." },
+        { status: error.response?.status ?? 500 },
+      );
+    }
+    console.error("Notes route failed:", error);
+    return NextResponse.json({ error: "Unable to load notes." }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   const cookieStore = await cookies();
   try {
-    const response = await api.post("/notes", await request.json(), {
+    const response = await api.post("/api/notes", await request.json(), {
       headers: {
         Cookie: cookieStore.toString(),
         "Content-Type": "application/json",
@@ -46,10 +44,14 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json(response.data, { status: response.status });
   } catch (error: unknown) {
-    return logErrorResponse(
-      error,
-      "Create note API request failed",
-      "Unable to create note.",
-    );
+    if (isAxiosError(error)) {
+      console.error("Create note API request failed:", error.response?.data ?? error.message);
+      return NextResponse.json(
+        error.response?.data ?? { error: "Unable to create note." },
+        { status: error.response?.status ?? 500 },
+      );
+    }
+    console.error("Create note route failed:", error);
+    return NextResponse.json({ error: "Unable to create note." }, { status: 500 });
   }
 }

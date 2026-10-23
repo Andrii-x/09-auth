@@ -46,8 +46,8 @@ async function refreshSession(
   const refreshToken = request.cookies.get("refreshToken")?.value;
   if (!refreshToken) return null;
 
-  const refreshResponse = await fetch(`${apiBaseUrl}/api/auth/refresh`, {
-    method: "POST",
+  const refreshResponse = await fetch(`${apiBaseUrl}/api/auth/session`, {
+    method: "GET",
     headers: { cookie: request.headers.get("cookie") ?? "" },
     cache: "no-store",
   });
@@ -69,11 +69,17 @@ async function refreshSession(
     .filter((cookie) => cookie.value !== undefined);
   if (refreshedCookies.length === 0) return null;
 
+  const cookieHeader = new Map(
+    request.cookies.getAll().map(({ name, value }) => [name, value]),
+  );
   for (const { name, value } of refreshedCookies) {
-    if (value !== undefined) request.cookies.set(name, value);
+    if (value !== undefined) cookieHeader.set(name, value);
   }
-
   const headers = new Headers(request.headers);
+  headers.set(
+    "cookie",
+    Array.from(cookieHeader, ([name, value]) => `${name}=${value}`).join("; "),
+  );
   const redirectResponse = destination
     ? NextResponse.redirect(destination)
     : undefined;
@@ -81,10 +87,9 @@ async function refreshSession(
     if (value === undefined) continue;
     redirectResponse?.cookies.set(name, value, options);
   }
-
+  if (redirectResponse) return redirectResponse;
   if (redirectResponse) return redirectResponse;
 
-  headers.set("cookie", request.cookies.toString());
   const continuationResponse = NextResponse.next({ request: { headers } });
   for (const { name, value, ...options } of refreshedCookies) {
     if (value === undefined) continue;
@@ -96,8 +101,7 @@ async function refreshSession(
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
   const accessToken =
-    request.cookies.get("accessToken")?.value ??
-    request.cookies.get("token")?.value;
+    request.cookies.get("accessToken")?.value;
   const hasValidAccessToken = Boolean(
     accessToken && !isTokenExpired(accessToken),
   );
