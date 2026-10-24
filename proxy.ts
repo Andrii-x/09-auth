@@ -88,7 +88,6 @@ async function refreshSession(
     redirectResponse?.cookies.set(name, value, options);
   }
   if (redirectResponse) return redirectResponse;
-  if (redirectResponse) return redirectResponse;
 
   const continuationResponse = NextResponse.next({ request: { headers } });
   for (const { name, value, ...options } of refreshedCookies) {
